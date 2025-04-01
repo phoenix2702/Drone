@@ -2,10 +2,13 @@ import os
 import cv2
 import numpy as np
 import tensorflow as tf
-from flask import Flask, request, render_template, redirect, url_for
+from flask import Flask, request, render_template, redirect, url_for, session
 from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
+
+# Set a secret key for session usage
+app.secret_key = "your_secret_key"
 
 # Configure upload folder
 UPLOAD_FOLDER = "static/uploads"
@@ -15,7 +18,7 @@ if not os.path.exists(UPLOAD_FOLDER):
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
 # Load the trained model
-MODEL_PATH = "compressed_model.h5"  # Ensure this model exists in your directory
+MODEL_PATH = "obstacle_detector.h5"  # Ensure this model exists in your directory
 model = tf.keras.models.load_model(MODEL_PATH)
 
 @app.route("/", methods=["GET", "POST"])
@@ -47,13 +50,19 @@ def upload_file():
             prediction = model.predict(img)[0][0]
             result = "🚨 Obstacle detected! Avoid it!" if prediction > 0.5 else "✅ No obstacle detected."
 
-            return redirect(url_for("result", filename=filename, result=result))
+            # Store result in session
+            session["filename"] = filename
+            session["result"] = result
+
+            return redirect(url_for("result"))
 
     return render_template("index.html")
 
-@app.route("/result/<filename>/<result>")
-def result(filename, result):
+@app.route("/result")
+def result():
+    filename = session.get("filename", "")
+    result = session.get("result", "")
     return render_template("result.html", filename=filename, result=result)
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, host="0.0.0.0", port=5000)
