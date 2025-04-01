@@ -56,7 +56,7 @@ def upload_file():
 
     return render_template("index.html")
 
-@app.route("/result")
+@app.route("/result", methods=["GET", "POST"])
 def result():
     filename = request.args.get("filename", "")
     result = request.args.get("result", "")
