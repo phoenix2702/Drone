@@ -1,35 +1,33 @@
 import os
-import numpy as np
 import cv2
+import numpy as np
 import tensorflow as tf
-from flask import Flask, request, render_template, redirect
+from flask import Flask, request, render_template, redirect, url_for
 from werkzeug.utils import secure_filename
 
-# Initialize Flask app
 app = Flask(__name__)
-import sys
-sys.stdout.reconfigure(encoding='utf-8')
 
-
-# Define upload folder
+# Configure upload folder
 UPLOAD_FOLDER = "static/uploads"
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
+
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
-# Load the trained CNN model
-model = tf.keras.models.load_model("compressed_model.h5")
+# Load the trained model
+MODEL_PATH = "obstacle_detector.h5"  # Ensure this model exists in your directory
+model = tf.keras.models.load_model(MODEL_PATH)
 
 @app.route("/", methods=["GET", "POST"])
 def upload_file():
     if request.method == "POST":
         if "file" not in request.files:
             return redirect(request.url)
-        
+
         file = request.files["file"]
         if file.filename == "":
             return redirect(request.url)
-        
+
         if file:
             filename = secure_filename(file.filename)
             filepath = os.path.join(app.config["UPLOAD_FOLDER"], filename)
@@ -49,9 +47,13 @@ def upload_file():
             prediction = model.predict(img)[0][0]
             result = "🚨 Obstacle detected! Avoid it!" if prediction > 0.5 else "✅ No obstacle detected."
 
-            return render_template("result.html", filename=filename, result=result)
+            return redirect(url_for("result", filename=filename, result=result))
 
     return render_template("index.html")
 
+@app.route("/result/<filename>/<result>")
+def result(filename, result):
+    return render_template("result.html", filename=filename, result=result)
+
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=port, debug=True)
+    app.run(debug=True)
