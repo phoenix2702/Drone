@@ -62,38 +62,31 @@ def upload_file():
     return render_template("index.html")
 
 
-@app.route("/result", methods=["GET", "POST"])
+@app.route("/result", methods=["POST"])
 def result():
-    """Displays result in HTML for browser and plain text for Kivy."""
-    if request.method == "POST":
-        if "file" not in request.files:
-            return "No file uploaded", 400
+    if "file" not in request.files:
+        return jsonify({"error": "No file uploaded"}), 400
 
-        file = request.files["file"]
-        if file.filename == "":
-            return "Empty filename", 400
+    file = request.files["file"]
+    if file.filename == "":
+        return jsonify({"error": "Empty filename"}), 400
 
-        # Save file
-        filename = secure_filename(file.filename)
-        filepath = os.path.join(app.config["UPLOAD_FOLDER"], filename)
-        file.save(filepath)
+    # Save file
+    filename = secure_filename(file.filename)
+    filepath = os.path.join(app.config["UPLOAD_FOLDER"], filename)
+    file.save(filepath)
 
-        # Process image
-        result_text, error = process_image(filepath)
-        if error:
-            return error, 400
+    # Process image
+    result_text, error = process_image(filepath)
+    if error:
+        return jsonify({"error": error}), 400
 
-        # ✅ If Kivy requests, return plain text
-        if request.headers.get("User-Agent") == "Kivy":
-            return result_text  # Kivy expects a plain text response
+    # Return JSON response for Kivy
+    return jsonify({
+        "result": result_text,
+        "image_url": f"https://drone-i3dq.onrender.com/static/uploads/{filename}"
+    })
 
-        # ✅ If browser requests, return HTML
-        return render_template("result.html", filename=filename, result=result_text)
-
-    # Handle GET request (browser viewing results)
-    filename = request.args.get("filename", "")
-    result_text = request.args.get("result", "")
-    return render_template("result.html", filename=filename, result=result_text)
 
 
 if __name__ == "__main__":
