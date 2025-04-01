@@ -15,7 +15,7 @@ if not os.path.exists(UPLOAD_FOLDER):
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
 # Load the trained model
-MODEL_PATH = "obstacle_detector.h5"  # Ensure this model exists in your directory
+MODEL_PATH = "compressed_model.h5"  # Ensure this model exists in your directory
 model = tf.keras.models.load_model(MODEL_PATH)
 
 @app.route("/", methods=["GET", "POST"])
