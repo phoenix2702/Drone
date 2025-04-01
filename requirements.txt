@@ -13,3 +13,4 @@ matplotlib-inline
 numpy==1.26.4
 requests
 SQLAlchemy
+opencv-python-headless
