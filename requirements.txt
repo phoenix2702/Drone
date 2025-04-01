@@ -15,4 +15,5 @@ requests
 SQLAlchemy
 opencv-python-headless
 tensorflow
+tflite-runtime==2.14.0
 
