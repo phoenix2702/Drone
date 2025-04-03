@@ -62,7 +62,7 @@ def upload_file():
     return render_template("index.html")
 
 
-@app.route("/result", methods=["POST"])
+@app.route("/result", methods=[ "POST" , "GET"])
 def result():
     if "file" not in request.files:
         return jsonify({"error": "No file uploaded"}), 400
